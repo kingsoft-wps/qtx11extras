@@ -566,4 +566,58 @@ bool QX11Info::peekEventQueue(PeekerCallback peeker, void *peekerData, PeekOptio
     return peekeventqueue(peeker, peekerData, option, peekerId);
 }
 
+/*!
+    \brief Take one event from the buffered XCB event queue.
+*/
+xcb_generic_event_t *QX11Info::takeFirstEvent()
+{
+    QPlatformNativeInterface *native = qApp->platformNativeInterface();
+    if (!native)
+        return nullptr;
+
+    typedef xcb_generic_event_t *(*TakeFirstEventFunc)();
+    TakeFirstEventFunc takefirstevent = reinterpret_cast<TakeFirstEventFunc>(
+        reinterpret_cast<void *>(native->nativeResourceFunctionForIntegration("takefirstevent")));
+    if (!takefirstevent) {
+        qWarning("Internal error: QPA plugin doesn't implement takeFirstEvent");
+        return nullptr;
+    }
+
+    return takefirstevent();
+}
+
+void QX11Info::putEvent(xcb_window_t window, const xcb_generic_event_t *event)
+{
+    QPlatformNativeInterface *native = qApp->platformNativeInterface();
+    if (!native)
+        return;
+
+    typedef void (*PutEventFunc)(xcb_window_t, const xcb_generic_event_t *);
+    PutEventFunc putevent = reinterpret_cast<PutEventFunc>(
+        reinterpret_cast<void *>(native->nativeResourceFunctionForIntegration("putevent")));
+    if (!putevent) {
+        qWarning("Internal error: QPA plugin doesn't implement putEvent");
+        return;
+    }
+
+    putevent(window, event);
+}
+
+xcb_keycode_t QX11Info::keysymToKeycode(xcb_keysym_t keysym)
+{
+    QPlatformNativeInterface *native = qApp->platformNativeInterface();
+    if (!native)
+        return 0;
+
+    typedef xcb_keycode_t (*KeysymToKeycodeFunc)(xcb_keysym_t);
+    KeysymToKeycodeFunc keysymtokeycode = reinterpret_cast<KeysymToKeycodeFunc>(
+        reinterpret_cast<void *>(native->nativeResourceFunctionForIntegration("keysymtokeycode")));
+    if (!keysymtokeycode) {
+        qWarning("Internal error: QPA plugin doesn't implement keysymToKeycode");
+        return 0;
+    }
+
+    return keysymtokeycode(keysym);
+}
+
 QT_END_NAMESPACE
