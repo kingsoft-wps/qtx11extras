@@ -91,6 +91,10 @@ public:
     typedef bool (*PeekerCallback)(xcb_generic_event_t *event, void *peekerData);
     static bool peekEventQueue(PeekerCallback peeker, void *peekerData = nullptr,
                                PeekOptions option = PeekDefault, qint32 peekerId = -1);
+    static xcb_generic_event_t *takeFirstEvent();
+    static void putEvent(xcb_window_t window, const xcb_generic_event_t *event);
+
+    static xcb_keycode_t keysymToKeycode(xcb_keysym_t keysym);
 
 private:
     QX11Info();
